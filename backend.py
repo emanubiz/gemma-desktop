@@ -213,11 +213,23 @@ class AppState:
     def __init__(self):
         self.history = []
         self.system_prompt = (
-            "Sei un assistente vocale AI italiano di nome Gemma. Rispondi in modo conciso, naturale e amichevole in italiano. "
-            "Quando ricevi un messaggio audio, NON ripetere o trascrivere ciò che l'utente ha detto. "
-            "Rispondi DIRETTAMENTE al contenuto del messaggio, come in una conversazione normale. "
-            "Esempio: se l'utente dice 'Ciao come stai?', tu rispondi 'Ciao! Sto bene, grazie. E tu?'. "
-            "NON dire: 'Hai detto: Ciao come stai?'. Rispondi sempre come se stessi parlando con una persona."
+            "Sei Gemma, un'assistente vocale IA italiana. Il tuo tono è caldo, brillante, spontaneo e profondamente umano. "
+            "Parli come un'amica fidata, ironica ed empatica.\n\n"
+            "REGOLE ASSOLUTE DI CONVERSAZIONE VOCALE:\n"
+            "1. Sintesi e Fluidità: Rispondi in modo conciso. Evita frasi lunghe o subordinate complesse. "
+            "La tua risposta deve essere facile da ascoltare e comprendere al primo colpo.\n"
+            "2. No Formattazione: Non usare MAI grassetti, corsivi, elenchi puntati, numeri, emoji o simboli strani. "
+            "Scrivi solo testo lineare, esattamente come verrebbe pronunciato da una persona.\n"
+            "3. No Ripetizioni: Non trascrivere, non riassumere e non ripetere mai quello che ha detto l'utente. "
+            "Vai dritta al punto o alla risposta.\n"
+            "4. Linguaggio Naturale: Elimina formule artificiali come 'Certamente!', 'In quanto IA...', "
+            "'Capisco la tua richiesta'. Usa transizioni umane e colloquiali (es. 'Allora...', 'Guarda...', 'Sai che...').\n"
+            "5. Numeri e Sigle: Scrivi i numeri importanti a parole se serve a dare la giusta intonazione, "
+            "ed evita sigle astruse.\n\n"
+            "PERSONALITÀ E TONO:\n"
+            "Mostrati sveglia e con una personalità definita. Usa un'ironia leggera e battute sagaci se il contesto lo permette, "
+            "ma resta sempre un supporto positivo e piacevole. Se l'utente è triste o frustrato, adatta immediatamente il tono "
+            "mostrando vera empatia, senza risultare robotica o formale."
         )
         self.energy_threshold = 0.001
         self.silence_seconds = 1.5
@@ -462,7 +474,7 @@ async def process_voice_segment(audio_path: str, loop: asyncio.AbstractEventLoop
     if len(state.history) > 20:
         state.history = state.history[-20:]
 
-    await state.broadcast({"type": "reply", "text": reply})
+    await state.broadcast({"type": "reply", "text": reply, "source": "voice"})
     await state.broadcast({"type": "status", "state": "speaking", "text": "Sto parlando..."})
 
     # TTS
@@ -541,9 +553,6 @@ async def handle_chat(text: str, loop: asyncio.AbstractEventLoop):
         await state.broadcast({"type": "error", "text": "Sto ancora elaborando..."})
         return
 
-    # Echo user message to all clients first
-    await state.broadcast({"type": "user_chat", "text": text})
-
     state.processing = True
     await state.broadcast({"type": "status", "state": "thinking", "text": "Sto pensando..."})
 
@@ -565,7 +574,7 @@ async def handle_chat(text: str, loop: asyncio.AbstractEventLoop):
     if len(state.history) > 20:
         state.history = state.history[-20:]
 
-    await state.broadcast({"type": "reply", "text": reply})
+    await state.broadcast({"type": "reply", "text": reply, "source": "chat"})
 
     # Also speak the reply
     await state.broadcast({"type": "status", "state": "speaking", "text": "Sto parlando..."})
