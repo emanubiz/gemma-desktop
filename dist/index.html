@@ -815,10 +815,10 @@ input[type="range"]::-webkit-slider-thumb {
   <div class="setting-group">
     <div class="setting-label">
       Log su file
-      <span class="setting-value" id="logStatusVal">ON</span>
+      <span class="setting-value" id="logStatusVal">OFF</span>
     </div>
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-dim);">
-      <input type="checkbox" id="logToggle" checked style="width:16px;height:16px;accent-color:var(--accent);">
+      <input type="checkbox" id="logToggle" style="width:16px;height:16px;accent-color:var(--accent);">
       Salva log in ~/gemma-desktop/logs/
     </label>
   </div>
@@ -937,6 +937,9 @@ input[type="range"]::-webkit-slider-thumb {
   logToggle.addEventListener('change', () => {
     const enabled = logToggle.checked;
     logStatusVal.textContent = enabled ? 'ON' : 'OFF';
+  });
+  // Ensure initial display matches default (OFF)
+  logStatusVal.textContent = 'OFF';
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'toggle_logging', enabled }));
     }

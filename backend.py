@@ -710,8 +710,6 @@ async def main():
 
 
 if __name__ == "__main__":
-    # Enable file logging by default so user can always inspect logs
-    enable_file_logging()
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
