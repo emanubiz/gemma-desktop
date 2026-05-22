@@ -993,7 +993,8 @@ Mostrati sveglia e con una personalità definita. Usa un'ironia leggera e battut
     if (!connected) return;
     micOn = !micOn;
     micToggle.classList.toggle('on', micOn);
-    micToggle.querySelector('span').textContent = micOn ? 'ASCOLTO ON' : 'ASCOLTO OFF';
+    const label = micToggle.querySelector('span');
+    if (label) label.textContent = micOn ? 'ASCOLTO ON' : 'ASCOLTO OFF';
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'mic', state: micOn ? 'on' : 'off' }));
     }
@@ -1003,6 +1004,15 @@ Mostrati sveglia e con una personalità definita. Usa un'ironia leggera e battut
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       toggleMic();
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      const tag = (document.activeElement?.tagName || '').toUpperCase();
+      if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && tag !== 'BUTTON') {
+        e.preventDefault();
+        toggleMic();
+      }
     }
   });
 
