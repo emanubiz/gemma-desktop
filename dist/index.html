@@ -1004,6 +1004,7 @@ Mostrati sveglia e con una personalità definita. Usa un'ironia leggera e battut
     const text = chatInput.value.trim();
     if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
     addChatMessage(text, 'user');
+    addTranscriptItem('&#128172;', text, true);
     ws.send(JSON.stringify({ type: 'chat', text }));
     chatInput.value = '';
     chatInput.style.height = 'auto';
