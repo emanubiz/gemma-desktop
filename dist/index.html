@@ -937,13 +937,12 @@ input[type="range"]::-webkit-slider-thumb {
   logToggle.addEventListener('change', () => {
     const enabled = logToggle.checked;
     logStatusVal.textContent = enabled ? 'ON' : 'OFF';
-  });
-  // Ensure initial display matches default (OFF)
-  logStatusVal.textContent = 'OFF';
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'toggle_logging', enabled }));
     }
   });
+  // Ensure initial display matches default (OFF)
+  logStatusVal.textContent = 'OFF';
 
   const systemPromptArea = document.getElementById('systemPromptArea');
   const savePromptBtn = document.getElementById('savePromptBtn');
