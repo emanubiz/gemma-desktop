@@ -989,13 +989,20 @@ Mostrati sveglia e con una personalità definita. Usa un'ironia leggera e battut
   });
 
   // --- Mic toggle ---
-  micToggle.addEventListener('click', () => {
+  function toggleMic() {
     if (!connected) return;
     micOn = !micOn;
     micToggle.classList.toggle('on', micOn);
     micToggle.querySelector('span').textContent = micOn ? 'ASCOLTO ON' : 'ASCOLTO OFF';
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'mic', state: micOn ? 'on' : 'off' }));
+    }
+  }
+  micToggle.addEventListener('click', toggleMic);
+  micToggle.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleMic();
     }
   });
 
