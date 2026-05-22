@@ -474,7 +474,7 @@ async def process_voice_segment(audio_path: str, loop: asyncio.AbstractEventLoop
     if len(state.history) > 20:
         state.history = state.history[-20:]
 
-    await state.broadcast({"type": "reply", "text": reply, "source": "voice"})
+    await state.broadcast({"type": "reply", "text": reply})
     await state.broadcast({"type": "status", "state": "speaking", "text": "Sto parlando..."})
 
     # TTS
@@ -574,7 +574,7 @@ async def handle_chat(text: str, loop: asyncio.AbstractEventLoop):
     if len(state.history) > 20:
         state.history = state.history[-20:]
 
-    await state.broadcast({"type": "reply", "text": reply, "source": "chat"})
+    await state.broadcast({"type": "reply", "text": reply})
 
     # Also speak the reply
     await state.broadcast({"type": "status", "state": "speaking", "text": "Sto parlando..."})
