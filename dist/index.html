@@ -1121,7 +1121,10 @@ Mostrati sveglia e con una personalità definita. Usa un'ironia leggera e battut
         case 'reply':
           if (msg.source === 'voice') {
             addTranscriptItem('&#9670;', msg.text, false);
+          } else if (msg.source === 'chat') {
+            addChatMessage(msg.text, 'assistant');
           } else {
+            addTranscriptItem('&#9670;', msg.text, false);
             addChatMessage(msg.text, 'assistant');
           }
           break;
