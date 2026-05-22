@@ -1082,6 +1082,9 @@ Mostrati sveglia e con una personalità definita. Usa un'ironia leggera e battut
     visualizer.className = 'visualizer-container ' + state;
     updateMascot(state);
 
+    if (state === 'thinking') {
+      chatMessages.appendChild(typingIndicator);
+    }
     typingIndicator.classList.toggle('visible', state === 'thinking');
   }
 
