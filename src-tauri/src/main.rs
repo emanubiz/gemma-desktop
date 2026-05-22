@@ -29,15 +29,6 @@ fn get_server_pids_from_ps() -> Vec<i32> {
     pids
 }
 
-fn kill_pids(pids: &[i32], sig: i32) {
-    for pid in pids {
-        unsafe {
-            // negative pid = process group; positive = single process
-            let _ = libc::kill(*pid, sig);
-        }
-    }
-}
-
 fn cleanup_remaining_servers() {
     // Phase 1: try PID file
     let pid_file = std::path::PathBuf::from("/tmp/gemma-desktop.pids.json");
@@ -77,39 +68,49 @@ fn cleanup_remaining_servers() {
     }
 }
 
+fn kill_backend_and_servers(backend: &BackendProcess) {
+    let mut guard = match backend.0.lock() {
+        Ok(g) => g,
+        Err(_) => return,
+    };
+    let child = match guard.as_mut() {
+        Some(c) => c,
+        None => return,
+    };
+
+    let pid = child.id() as i32;
+
+    // 1) Ask backend to shut down gracefully
+    unsafe {
+        let _ = libc::kill(pid, libc::SIGTERM);
+    }
+
+    // 2) Immediately also try to kill known children via PID file
+    cleanup_remaining_servers();
+
+    // 3) Wait up to 5 seconds for backend to exit
+    for _ in 0..50 {
+        std::thread::sleep(Duration::from_millis(100));
+        if child.try_wait().unwrap_or(None).is_some() {
+            cleanup_remaining_servers();
+            *guard = None;
+            return;
+        }
+    }
+
+    // 4) Backend still alive — force kill it
+    let _ = child.kill();
+    let _ = child.wait();
+
+    // 5) Final ps sweep
+    cleanup_remaining_servers();
+    *guard = None;
+}
+
 impl Drop for BackendProcess {
     fn drop(&mut self) {
-        if let Ok(mut guard) = self.0.lock() {
-            if let Some(ref mut child) = *guard {
-                let pid = child.id() as i32;
-
-                // 1) Ask backend to shut down gracefully
-                unsafe {
-                    let _ = libc::kill(pid, libc::SIGTERM);
-                }
-
-                // 2) Immediately also try to kill known children via PID file
-                //    so if backend dies before cleaning up, we don't lose the PIDs
-                cleanup_remaining_servers();
-
-                // 3) Wait up to 8 seconds for backend to exit
-                for _ in 0..80 {
-                    std::thread::sleep(Duration::from_millis(100));
-                    if child.try_wait().unwrap_or(None).is_some() {
-                        // Do one final ps sweep
-                        cleanup_remaining_servers();
-                        return;
-                    }
-                }
-
-                // 4) Backend still alive — force kill it
-                let _ = child.kill();
-                let _ = child.wait();
-
-                // 5) Final sweep
-                cleanup_remaining_servers();
-            }
-        }
+        // Safety net in case on_exit doesn't fire
+        kill_backend_and_servers(self);
     }
 }
 
@@ -127,6 +128,13 @@ fn main() {
             app.manage(backend);
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            if let tauri::RunEvent::Exit = event {
+                if let Some(bp) = app_handle.try_state::<BackendProcess>() {
+                    kill_backend_and_servers(&bp);
+                }
+            }
+        });
 }
