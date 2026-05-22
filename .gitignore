@@ -1,0 +1,18 @@
+# Rust build artifacts
+src-tauri/target/
+
+# macOS
+.DS_Store
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+logs/*.log
+
+# Generated Tauri files
+src-tauri/gen/

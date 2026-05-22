@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicbarker/tauri/tauri-v2.4.0/crates/tauri-utils/config.schema.json",
+  "identifier": "default",
+  "description": "Default capability",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default"
+  ]
+}
