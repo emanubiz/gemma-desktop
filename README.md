@@ -36,7 +36,7 @@ gemma-desktop/
 
 1. Launch the app (`cargo tauri dev` or open the built `.app`)
 2. The backend automatically starts Gemma (port 8080) and Kokoro (port 5050) servers
-3. **Voice** tab: toggle "LISTEN ON" to start speaking
+3. **Voice** tab: toggle "LISTEN ON" to start speaking (click or press **Enter**/**Space**)
 4. **Chat** tab: type text messages
 5. ⚙️ **Settings** (gear icon):
    - **Mic sensitivity** — adjust VAD threshold
@@ -65,7 +65,7 @@ cd ~/gemma-desktop
 cargo tauri build
 ```
 
-The `.app` bundle is at `src-tauri/target/release/bundle/macos/`.
+The `.app` is at `src-tauri/target/release/bundle/macos/`; the `.dmg` is at `src-tauri/target/release/bundle/dmg/`.
 
 ## Architecture
 
@@ -78,6 +78,6 @@ The backend communicates with local servers:
 - Kokoro TTS: `http://localhost:5050`
 
 On app close:
-1. Frontend sends `quit` via WebSocket
-2. Backend terminates child servers (SIGTERM → SIGKILL)
-3. Rust runs safety sweeps via PID file and `ps aux`
+1. Frontend sends `quit` via WebSocket; backend runs `cleanup_subprocesses()` (SIGTERM → SIGKILL)
+2. Rust (Tauri) independently runs `kill_backend_and_servers()` → SIGTERM to Python, then PID file + `ps aux` sweeps
+3. Both layers act as safety nets for each other
