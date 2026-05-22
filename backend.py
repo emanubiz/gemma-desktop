@@ -265,8 +265,14 @@ def calibrate_noise(stream, block_size, block_duration, state):
         log.warning(f"Mic calibration failed: {e}")
 
 
+class MicInitError(Exception):
+    pass
+
+
 def record_vad(state: AppState) -> str | None:
-    """Record audio until silence is detected. Returns path to WAV file or None."""
+    """Record audio until silence is detected. Returns path to WAV file or None.
+    Raises MicInitError if the microphone stream cannot be opened (hardware issue).
+    """
     chunks = []
     silence_frames = 0
     has_speech = False
@@ -286,8 +292,8 @@ def record_vad(state: AppState) -> str | None:
         )
         stream.start()
     except Exception as e:
-        log.error(f"Mic error: {e}")
-        return None
+        log.error(f"Mic hardware error: {e}")
+        raise MicInitError(str(e))
 
     # Calibrate once per mic session
     if state.noise_floor == 0:
@@ -501,19 +507,21 @@ def mic_loop(loop: asyncio.AbstractEventLoop):
         log.info("Mic is ON, starting VAD recording...")
         try:
             audio_path = record_vad(state)
-        except Exception as e:
+        except MicInitError as e:
             log.error(f"Mic recording exception: {e}")
-            audio_path = None
-
-        if audio_path is None:
-            # If mic is on but we got no audio, there might be a hardware/driver issue.
-            # Broadcast an error once so the UI can show it.
             if state.mic_on and not mic_error_broadcasted:
                 asyncio.run_coroutine_threadsafe(
                     state.broadcast({"type": "error", "text": "Microfono non disponibile. Controlla i permessi."}),
                     loop
                 )
                 mic_error_broadcasted = True
+            continue
+        except Exception as e:
+            log.error(f"Unexpected mic error: {e}")
+            continue
+
+        if audio_path is None:
+            mic_error_broadcasted = False
             continue
 
         mic_error_broadcasted = False
